@@ -21,7 +21,7 @@ def create(name: str):
         'https://github.com/SHIINASAMA/pyside_template.git',
         dst
     ])
-    if rt:
+    if rt.returncode:
         logging.error('Failed to clone template')
         return
 
