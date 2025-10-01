@@ -1,5 +1,5 @@
 [project]
-name = "pys-cli"
+name = "pyside-cli"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pys-cli = "cli.__main__:main"
+pyside-cli = "cli.__main__:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
