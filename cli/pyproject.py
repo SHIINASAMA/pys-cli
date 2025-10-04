@@ -10,8 +10,8 @@ def load_pyproject():
      2. enabled languages list"""
     with open("pyproject.toml") as f:
         data = toml.load(f)
-    config = glom.glom(data, "tool.build", default={})
-    platform_config = glom.glom(data, f"tool.build.{sys.platform}", default={})
+    config = glom.glom(data, "tool.pyside_cli", default={})
+    platform_config = glom.glom(data, f"tool.pyside_cli.{sys.platform}", default={})
     config.update(platform_config)
 
     nuitka_cmd = ""
@@ -26,6 +26,6 @@ def load_pyproject():
             cmd = f"--{k} "
             nuitka_cmd += cmd
 
-    lang_list = glom.glom(data, "tool.build.i18n.languages", default=[])
+    lang_list = glom.glom(data, "tool.pyside_cli.i18n.languages", default=[])
 
     return nuitka_cmd, lang_list
