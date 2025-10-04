@@ -9,15 +9,14 @@ It helps you quickly create a template project:
 ```bash
 mkdir app && cd app
 pip install pyside-cli
-pyside-cli --create .
+pyside-cli --create . # requires: git
 ```
 
-You can also build the project or run tests with a single command.  
-Note: running tests requires **pytest**.
+You can also build the project or run tests with a single command.
 
 ```bash
-pyside-cli --all --onefile # for build
-pyside-cli --test          # for testing
+pyside-cli --all --onefile # for build: requires pyside6, nuitka
+pyside-cli --test          # for testing: requires pytest
 ```
 
 ## Links
