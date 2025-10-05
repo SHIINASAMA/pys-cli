@@ -1,6 +1,28 @@
 import logging
 import os
+import subprocess
+import sys
+from concurrent.futures import as_completed
+from concurrent.futures.process import ProcessPoolExecutor
 from pathlib import Path
+
+
+def _compile_ui(input_file: Path, output_file: Path):
+    """Compile .ui files to .py files
+    This function will be called in build_ui via `ProcessPoolExecutor`"""
+    try:
+        result = subprocess.run([
+            "pyside6-uic",
+            str(input_file),
+            "-o",
+            str(output_file)
+        ])
+        success = result.returncode == 0
+        if not success:
+            logging.debug(result.stderr)
+        return success, input_file, output_file
+    except subprocess.CalledProcessError:
+        return False, input_file, output_file
 
 
 def build_ui(ui_list, cache):
@@ -16,6 +38,7 @@ def build_ui(ui_list, cache):
     logging.info("Converting ui files to Python files...")
     ui_cache = cache.get("ui", {})
 
+    args_pair = []
     for input_file in ui_list:
         try:
             rel_path = input_file.parent.relative_to(ui_dir)
@@ -36,15 +59,30 @@ def build_ui(ui_list, cache):
 
         ui_cache[str(input_file)] = mtime
 
-        # Run pyside6-uic
-        cmd = f'pyside6-uic "{input_file}" -o "{output_file}"'
-        if 0 != os.system(cmd):
-            logging.error(f"Failed to convert {input_file}.")
-            exit(1)
+        # Collect files that need reconvert
+        args_pair.append((input_file, output_file))
 
-        logging.info(f"Converted {input_file} to {output_file}")
+    has_error = False
+    if args_pair:
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(_compile_ui, i, o) for i, o in args_pair]
+            for f in as_completed(futures):
+                ok, i, o = f.result()
+                if ok:
+                    logging.info(f"Converted {i} to {o}")
+                else:
+                    logging.error(f"Failed to convert {i}.")
+                    has_error = True
+                    break
+            if has_error:
+                for future in futures:
+                    future.cancel()
+                for p in executor._processes.values():
+                    p.terminate()
 
     cache["ui"] = ui_cache
+    if has_error:
+        sys.exit(-1)
 
 
 def build_assets(asset_list, cache, no_cache=False):
@@ -98,7 +136,13 @@ def build_assets(asset_list, cache, no_cache=False):
         logging.info(f'Generated {qrc_file}.')
 
         # Compile qrc file to Python resource
-        if 0 != os.system(f'pyside6-rcc {qrc_file} -o {py_res_file}'):
+        result = subprocess.run([
+            "pyside6-rcc",
+            str(qrc_file),
+            "-o",
+            str(py_res_file)
+        ])
+        if 0 != result.returncode:
             logging.error('Failed to convert assets.qrc.')
             exit(1)
         logging.info(f'Converted {qrc_file} to {py_res_file}.')
@@ -125,9 +169,16 @@ def build_i18n_ts(lang_list, files_to_scan, cache):
         logging.info("Generating %s ...", ts_file)
 
         files_str = " ".join(f'"{f}"' for f in files_to_scan)
-        cmd = f'pyside6-lupdate -silent -locations absolute -extensions ui {files_str} -ts "{ts_file}"'
+        # cmd = f'pyside6-lupdate -silent -locations absolute -extensions ui {files_str} -ts "{ts_file}"'
 
-        if 0 != os.system(cmd):
+        result = subprocess.run([
+            "pyside6-lupdate",
+            "-silent",
+            "-locations absolute",
+            f"-extensions ui {files_str} -ts {ts_file}"
+        ])
+
+        if 0 != result.returncode:
             logging.error("Failed to generate translation file: %s", ts_file)
             exit(1)
 
@@ -135,6 +186,25 @@ def build_i18n_ts(lang_list, files_to_scan, cache):
         logging.info("Generated translation file: %s", ts_file)
 
     cache["i18n"] = i18n_cache
+
+
+def _compile_qm(input_file: Path, output_file: Path):
+    """Compile .ts files to .qm files
+    This function will be called in build_i18n via `ProcessPoolExecutor`"""
+    logging.info(f"Compiling {input_file} to {output_file}")
+    try:
+        result = subprocess.run([
+            "pyside6-lrelease",
+            str(input_file),
+            "-qm",
+            str(output_file)
+        ])
+        success = result.returncode == 0
+        if not success:
+            logging.debug(result.stderr)
+        return success, input_file, output_file
+    except subprocess.CalledProcessError:
+        return False, input_file, output_file
 
 
 def build_i18n(i18n_list, cache):
@@ -150,6 +220,7 @@ def build_i18n(i18n_list, cache):
     # Get cache for i18n
     i18n_cache = cache.get("i18n", {})
 
+    args_pair = []
     for ts_file in i18n_list:
         try:
             ts_file = Path(ts_file)
@@ -164,20 +235,32 @@ def build_i18n(i18n_list, cache):
             logging.info("%s is up to date.", ts_file)
             continue
 
-        logging.info("Compiling %s to %s", ts_file, qm_file)
-
-        # Run pyside6-lrelease to compile ts -> qm
-        cmd = f'pyside6-lrelease "{ts_file}" -qm "{qm_file}"'
-        if 0 != os.system(cmd):
-            logging.error("Failed to compile translation file: %s", ts_file)
-            exit(1)
-
-        logging.info("Compiled %s", qm_file)
+        args_pair.append((ts_file, qm_file))
 
         # Update cache
         i18n_cache[str(ts_file)] = ts_mtime
 
+    has_error = False
+    if args_pair:
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(_compile_qm, i, o) for i, o in args_pair]
+            for f in as_completed(futures):
+                ok, i, _ = f.result()
+                if ok:
+                    logging.info(f"Compiled {i}")
+                else:
+                    logging.error(f"Failed to compile translation file: {i}.")
+                    has_error = True
+                    break
+            if has_error:
+                for future in futures:
+                    future.cancel()
+                for p in executor._processes.values():
+                    p.terminate()
+
     cache["i18n"] = i18n_cache
+    if has_error:
+        sys.exit(-1)
 
 
 def gen_init_py():
