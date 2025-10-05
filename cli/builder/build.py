@@ -1,5 +1,13 @@
 import logging
 import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import List
+
+from cli.builder.nuitka import build_nuitka_cmd
 
 
 def gen_version_py(version):
@@ -22,3 +30,36 @@ def gen_filelist(root_dir: str, filelist_name: str):
     with open(filelist_name, "w", encoding="utf-8") as f:
         f.write("\n".join(paths))
         f.write("\n")
+
+
+def build(args, extra_nuitka_options_list: List[str]):
+    """call nuitka to build the app"""
+    if sys.platform != 'win32':
+        path = Path('build/App')
+        if path.exists() and path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists() and path.is_file():
+            path.unlink()
+    start = time.perf_counter()
+    logging.info('Building the app...')
+    cmd = build_nuitka_cmd(args, extra_nuitka_options_list)
+    logging.debug(' '.join(cmd))
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        end = time.perf_counter()
+        if result.returncode != 0:
+            logging.error(f'Failed to build app in {end - start:.3f}s.')
+            logging.error(f'Nuitka stderr: {result.stderr}')
+            sys.exit(1)
+        logging.info(f'Build complete in {end - start:.3f}s.')
+        if not args.onefile:
+            if os.path.exists('build/App'):
+                shutil.rmtree('build/App')
+            shutil.move('build/__main__.dist', 'build/App')
+            logging.info("Generate the filelist.")
+            gen_filelist('build/App', 'build/App/filelist.txt')
+            logging.info("Filelist has been generated.")
+    except Exception as e:
+        end = time.perf_counter()
+        logging.error(f'Exception during build: {e}, time: {end - start:.3f}s.')
+        sys.exit(1)
