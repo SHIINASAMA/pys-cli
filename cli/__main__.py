@@ -3,9 +3,8 @@ import os
 import sys
 
 from cli.args import get_parser
-from cli.builder.build import gen_version_py
-from cli.builder.nuitka import build
-from cli.builder.qt import build_i18n_ts, build_ui, build_i18n, build_assets, gen_init_py
+from cli.builder.build import gen_version_py, build
+from cli.builder.qt import build_i18n_ts, build_i18n, build_ui, build_assets, gen_init_py
 from cli.cache import load_cache, save_cache
 from cli.create import create
 from cli.git import get_last_tag
@@ -21,7 +20,7 @@ def main():
     i18n_list = []
     lang_list = []
     cache = {}
-    opt_from_toml = ""
+    extra_nuitka_options_list = []
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -51,10 +50,11 @@ def main():
          source_list,
          ui_list) = glob_files()
 
-        (opt_from_toml, lang_list) = load_pyproject()
+        (extra_nuitka_options_list, lang_list) = load_pyproject()
 
     if not args.no_cache:
         cache = load_cache()
+
     if args.i18n:
         build_i18n_ts(
             lang_list=lang_list,
@@ -79,7 +79,7 @@ def main():
         gen_init_py()
     save_cache(cache)
     if args.build or args.all:
-        build(args, opt_from_toml)
+        build(args, extra_nuitka_options_list)
 
 
 if __name__ == '__main__':

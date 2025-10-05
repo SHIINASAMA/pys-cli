@@ -1,8 +1,9 @@
 import logging
-from os import system
+import subprocess
 
 
 def run_test(args):
-    cmd = 'pytest ' + (" ".join(args.backend_args))
-    logging.debug(cmd)
-    return system(cmd)
+    cmd = ['pytest'] + args.backend_args
+    logging.debug(' '.join(cmd))
+    result = subprocess.run(cmd)
+    return result.returncode
