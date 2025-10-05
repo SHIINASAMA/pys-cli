@@ -5,5 +5,5 @@ import subprocess
 def run_test(args):
     cmd = ['pytest'] + args.backend_args
     logging.debug(' '.join(cmd))
-    result = subprocess.run(cmd)
+    result = subprocess.run(cmd, shell=True)
     return result.returncode

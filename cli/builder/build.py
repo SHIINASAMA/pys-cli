@@ -45,11 +45,10 @@ def build(args, extra_nuitka_options_list: List[str]):
     cmd = build_nuitka_cmd(args, extra_nuitka_options_list)
     logging.debug(' '.join(cmd))
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, shell=True)
         end = time.perf_counter()
         if result.returncode != 0:
             logging.error(f'Failed to build app in {end - start:.3f}s.')
-            logging.error(f'Nuitka stderr: {result.stderr}')
             sys.exit(1)
         logging.info(f'Build complete in {end - start:.3f}s.')
         if not args.onefile:

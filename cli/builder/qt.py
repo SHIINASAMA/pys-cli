@@ -15,8 +15,9 @@ def _compile_ui(input_file: Path, output_file: Path):
             "pyside6-uic",
             str(input_file),
             "-o",
-            str(output_file)
-        ])
+            str(output_file)],
+            shell=True
+        )
         success = result.returncode == 0
         if not success:
             logging.debug(result.stderr)
@@ -140,8 +141,8 @@ def build_assets(asset_list, cache, no_cache=False):
             "pyside6-rcc",
             str(qrc_file),
             "-o",
-            str(py_res_file)
-        ])
+            str(py_res_file)],
+            shell=True)
         if 0 != result.returncode:
             logging.error('Failed to convert assets.qrc.')
             exit(1)
@@ -168,16 +169,18 @@ def build_i18n_ts(lang_list, files_to_scan, cache):
         ts_file = i18n_dir / f"{lang}.ts"
         logging.info("Generating %s ...", ts_file)
 
-        files_str = " ".join(f'"{f}"' for f in files_to_scan)
+        # files_str = " ".join(f'"{f}"' for f in files_to_scan)
         # cmd = f'pyside6-lupdate -silent -locations absolute -extensions ui {files_str} -ts "{ts_file}"'
 
-        result = subprocess.run([
+        cmd = [
             "pyside6-lupdate",
             "-silent",
-            "-locations absolute",
-            f"-extensions ui {files_str} -ts {ts_file}"
-        ])
-
+            "-locations", "absolute",
+            "-extensions", "ui",
+            *files_to_scan,
+            "-ts", str(ts_file)
+        ]
+        result = subprocess.run(cmd, shell=True)
         if 0 != result.returncode:
             logging.error("Failed to generate translation file: %s", ts_file)
             exit(1)
@@ -197,8 +200,9 @@ def _compile_qm(input_file: Path, output_file: Path):
             "pyside6-lrelease",
             str(input_file),
             "-qm",
-            str(output_file)
-        ])
+            str(output_file)],
+            shell=True
+        )
         success = result.returncode == 0
         if not success:
             logging.debug(result.stderr)

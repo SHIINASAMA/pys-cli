@@ -30,8 +30,9 @@ def create(name: str):
         'git',
         'clone',
         'https://github.com/SHIINASAMA/pyside_template.git',
-        dst
-    ])
+        dst],
+        shell=True
+    )
     if rt.returncode:
         logging.error('Failed to clone template')
         return
@@ -56,7 +57,8 @@ def create(name: str):
     subprocess.run([
         'git',
         'init'],
-        cwd=project_path
+        cwd=project_path,
+        shell=True
     )
 
     logging.info(f"Project {name} created successfully")
