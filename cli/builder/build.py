@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List
 
 from cli.builder.nuitka import build_nuitka_cmd
+from cli.builder.pyinstaller import build_pyinstaller_cmd
 
 
 def gen_version_py(version):
@@ -32,7 +33,7 @@ def gen_filelist(root_dir: str, filelist_name: str):
         f.write("\n")
 
 
-def build(args, extra_nuitka_options_list: List[str]):
+def build(args, extra_backend_options_list: List[str]):
     """call nuitka to build the app"""
     if sys.platform != 'win32':
         path = Path('build/App')
@@ -42,7 +43,10 @@ def build(args, extra_nuitka_options_list: List[str]):
             path.unlink()
     start = time.perf_counter()
     logging.info('Building the app...')
-    cmd = build_nuitka_cmd(args, extra_nuitka_options_list)
+    if args.backend == 'nuitka':
+        cmd = build_nuitka_cmd(args, extra_backend_options_list)
+    else:
+        cmd = build_pyinstaller_cmd(args)
     logging.debug(' '.join(cmd))
     try:
         result = subprocess.run(cmd, shell=True)
@@ -52,9 +56,10 @@ def build(args, extra_nuitka_options_list: List[str]):
             sys.exit(1)
         logging.info(f'Build complete in {end - start:.3f}s.')
         if not args.onefile:
-            if os.path.exists('build/App'):
-                shutil.rmtree('build/App')
-            shutil.move('build/__main__.dist', 'build/App')
+            if args.backend == 'nuitka':
+                if os.path.exists('build/App'):
+                    shutil.rmtree('build/App')
+                shutil.move('build/app.dist', 'build/App')
             logging.info("Generate the filelist.")
             gen_filelist('build/App', 'build/App/filelist.txt')
             logging.info("Filelist has been generated.")

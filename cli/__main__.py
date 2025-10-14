@@ -20,7 +20,7 @@ def main():
     i18n_list = []
     lang_list = []
     cache = {}
-    extra_nuitka_options_list = []
+    extra_backend_options_list = []
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -50,7 +50,7 @@ def main():
          source_list,
          ui_list) = glob_files()
 
-        (extra_nuitka_options_list, lang_list) = load_pyproject()
+        (extra_backend_options_list, lang_list) = load_pyproject()
 
     if not args.no_cache:
         cache = load_cache()
@@ -79,7 +79,7 @@ def main():
         gen_init_py()
     save_cache(cache)
     if args.build or args.all:
-        build(args, extra_nuitka_options_list)
+        build(args, extra_backend_options_list)
 
 
 if __name__ == '__main__':
