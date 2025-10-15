@@ -27,6 +27,7 @@ def main():
     args = get_parser().parse_args()
     if args.backend_args and args.backend_args[0] == "--":
         args.backend_args = args.backend_args[1:]
+
     if args.debug:
         logging.info('Debug mode enabled.')
         logging.getLogger().setLevel(logging.DEBUG)
@@ -35,7 +36,7 @@ def main():
         create(args.create)
         sys.exit(0)
 
-        # check working directory
+    # check working directory
     # if 'app' is not in the current working directory, exit
     if not os.path.exists('app'):
         logging.error('Please run this script from the project root directory.')

@@ -10,12 +10,15 @@ from pathlib import Path
 def _compile_ui(input_file: Path, output_file: Path):
     """Compile .ui files to .py files
     This function will be called in build_ui via `ProcessPoolExecutor`"""
+    cmd = [
+        "pyside6-uic",
+        str(input_file),
+        "-o",
+        str(output_file)]
+    logging.debug("".join(cmd))
     try:
-        result = subprocess.run([
-            "pyside6-uic",
-            str(input_file),
-            "-o",
-            str(output_file)],
+        result = subprocess.run(
+            cmd,
             shell=True
         )
         success = result.returncode == 0
@@ -180,7 +183,8 @@ def build_i18n_ts(lang_list, files_to_scan, cache):
             *files_to_scan,
             "-ts", str(ts_file)
         ]
-        result = subprocess.run(cmd, shell=True)
+        logging.debug(" ".join(cmd))
+        result = subprocess.run(cmd, shell=True, env=os.environ.copy())
         if 0 != result.returncode:
             logging.error("Failed to generate translation file: %s", ts_file)
             exit(1)
@@ -195,12 +199,15 @@ def _compile_qm(input_file: Path, output_file: Path):
     """Compile .ts files to .qm files
     This function will be called in build_i18n via `ProcessPoolExecutor`"""
     logging.info(f"Compiling {input_file} to {output_file}")
+    cmd = [
+        "pyside6-lrelease",
+        str(input_file),
+        "-qm",
+        str(output_file)]
+    logging.debug(" ".join(cmd))
     try:
-        result = subprocess.run([
-            "pyside6-lrelease",
-            str(input_file),
-            "-qm",
-            str(output_file)],
+        result = subprocess.run(
+            cmd,
             shell=True
         )
         success = result.returncode == 0
