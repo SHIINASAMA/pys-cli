@@ -3,10 +3,13 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 import toml
 from glom import assign, delete, glom
+
+from cli.toolchain import Toolchain
 
 
 def _remove_readonly(func, path, _):
@@ -18,16 +21,20 @@ def _remove_git(path: Path):
     shutil.rmtree(path, onerror=_remove_readonly)
 
 
-def create(name: str):
+def create(toolchain: Toolchain, name: str):
     dst = name
     if name == '.':
         name = Path.cwd().name
         dst = '.'
 
+    if toolchain.git_executable is None:
+        logging.warning("Git executable not found, skipping")
+        sys.exit(-1)
+
     logging.info(f"Creating ...")
 
     rt = subprocess.run([
-        'git',
+        toolchain.git_executable,
         'clone',
         'https://github.com/SHIINASAMA/pyside_template.git',
         dst],

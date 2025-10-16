@@ -1,7 +1,7 @@
-def build_pyinstaller_cmd(args):
+def build_pyinstaller_cmd(pyinstaller, args):
     workpath = 'build/' + ('pyinstaller_onefile_build' if args.onefile else 'pyinstaller_onedir_build')
     cmd = [
-        'pyinstaller',
+        pyinstaller,
         '--onefile' if args.onefile else '--onedir',
         '--distpath', 'build',
         '--workpath', workpath,

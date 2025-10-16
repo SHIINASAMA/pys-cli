@@ -1,9 +1,9 @@
 import os
 
 
-def build_nuitka_cmd(args, extra_nuitka_options_list):
+def build_nuitka_cmd(nuitka, args, extra_nuitka_options_list):
     cmd = [
-        'nuitka',
+        nuitka,
         '--output-dir=build',
         '--output-filename=App',
         'app',

@@ -6,6 +6,8 @@ from concurrent.futures import as_completed
 from concurrent.futures.process import ProcessPoolExecutor
 from pathlib import Path
 
+from cli.toolchain import Toolchain
+
 
 def _compile_ui(input_file: Path, output_file: Path):
     """Compile .ui files to .py files
@@ -29,8 +31,12 @@ def _compile_ui(input_file: Path, output_file: Path):
         return False, input_file, output_file
 
 
-def build_ui(ui_list, cache):
+def build_ui(toolchain: Toolchain, ui_list, cache):
     """Compile *.ui files into Python files using pyside6-uic, preserving directory structure."""
+    if toolchain.uic_executable is None:
+        logging.warning("PySide6 uic not found, exiting")
+        sys.exit(-1)
+
     ui_dir = Path("app/ui")
     res_dir = Path("app/resources")
 
@@ -89,8 +95,12 @@ def build_ui(ui_list, cache):
         sys.exit(-1)
 
 
-def build_assets(asset_list, cache, no_cache=False):
+def build_assets(toolchain: Toolchain, asset_list, cache, no_cache=False):
     """Generate assets.qrc from files in app/assets and compile it with pyside6-rcc."""
+    if toolchain.rcc_executable is None:
+        logging.warning('PySide6 rcc not found, exiting')
+        sys.exit(-1)
+
     assets_dir = Path('app/assets')
     res_dir = Path('app/resources')
     qrc_file = res_dir / 'assets.qrc'
@@ -156,11 +166,15 @@ def build_assets(asset_list, cache, no_cache=False):
     cache['assets'] = assets_cache
 
 
-def build_i18n_ts(lang_list, files_to_scan, cache):
+def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
     """
     Generate translation (.ts) files for all languages in lang_list
     by scanning self.ui_list and self.source_list using pyside6-lupdate.
     """
+    if toolchain.lupdate_executable is None:
+        logging.warning("PySide6 lupdate not found, skipping i18n generation")
+        return
+
     i18n_dir = Path("app/i18n")
     i18n_dir.mkdir(parents=True, exist_ok=True)
 
@@ -176,7 +190,7 @@ def build_i18n_ts(lang_list, files_to_scan, cache):
         # cmd = f'pyside6-lupdate -silent -locations absolute -extensions ui {files_str} -ts "{ts_file}"'
 
         cmd = [
-            "pyside6-lupdate",
+            toolchain.lupdate_executable,
             "-silent",
             "-locations", "absolute",
             "-extensions", "ui",
@@ -218,11 +232,15 @@ def _compile_qm(input_file: Path, output_file: Path):
         return False, input_file, output_file
 
 
-def build_i18n(i18n_list, cache):
+def build_i18n(toolchain: Toolchain, i18n_list, cache):
     """
     Compile .ts translation files into .qm files under app/assets/i18n/.
     Only regenerate .qm if the corresponding .ts file has changed.
     """
+    if toolchain.lrelease_executable is None:
+        logging.warning("PySide6 lrelease not found, skipping i18n compilation")
+        return
+
     qm_root = Path("app/assets/i18n")
     qm_root.mkdir(parents=True, exist_ok=True)
 
