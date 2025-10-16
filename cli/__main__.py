@@ -89,12 +89,14 @@ def main():
         build_ui(
             toolchain=toolchain,
             ui_list=ui_list,
-            cache=cache
+            cache=cache,
+            low_perf_mode=args.low_perf
         )
         build_i18n(
             toolchain=toolchain,
             i18n_list=i18n_list,
-            cache=cache
+            cache=cache,
+            low_perf_mode=args.low_perf
         )
         build_assets(
             toolchain=toolchain,

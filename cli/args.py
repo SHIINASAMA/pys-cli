@@ -26,8 +26,11 @@ def get_parser():
     package_format_group.add_argument('--onedir', action='store_true',
                                       help='(for build) Create a directory with the executable and all dependencies')
 
-    parser.add_argument('--backend', metavar='BACKEND', type=str, help='Backend to use (Default: nuitka)',
+    parser.add_argument('--backend', metavar='BACKEND', type=str, help='(for build) Backend to use (Default: nuitka)',
                         choices=['nuitka', 'pyinstaller'], default='nuitka')
+
+    parser.add_argument('--low-perf', action='store_true',
+                        help='(for build) Use low performance mode, this may improve compatibility on some systems', )
 
     parser.add_argument('--no-cache', action='store_true', help='Ignore existing caches', required=False)
 

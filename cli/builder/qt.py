@@ -9,15 +9,15 @@ from pathlib import Path
 from cli.toolchain import Toolchain
 
 
-def _compile_ui(input_file: Path, output_file: Path):
+def _compile_ui(uic, input_file: Path, output_file: Path):
     """Compile .ui files to .py files
     This function will be called in build_ui via `ProcessPoolExecutor`"""
     cmd = [
-        "pyside6-uic",
+        uic,
         str(input_file),
         "-o",
         str(output_file)]
-    logging.debug("".join(cmd))
+    logging.debug(" ".join(cmd))
     try:
         result = subprocess.run(
             cmd,
@@ -31,7 +31,7 @@ def _compile_ui(input_file: Path, output_file: Path):
         return False, input_file, output_file
 
 
-def build_ui(toolchain: Toolchain, ui_list, cache):
+def build_ui(toolchain: Toolchain, ui_list, cache, low_perf_mode):
     """Compile *.ui files into Python files using pyside6-uic, preserving directory structure."""
     if toolchain.uic_executable is None:
         logging.warning("PySide6 uic not found, exiting")
@@ -69,13 +69,16 @@ def build_ui(toolchain: Toolchain, ui_list, cache):
 
         ui_cache[str(input_file)] = mtime
 
-        # Collect files that need reconvert
-        args_pair.append((input_file, output_file))
+        if low_perf_mode:
+            _compile_ui(toolchain.uic_executable, input_file, output_file)
+        else:
+            # Collect files that need reconvert
+            args_pair.append((input_file, output_file))
 
     has_error = False
     if args_pair:
         with ProcessPoolExecutor() as executor:
-            futures = [executor.submit(_compile_ui, i, o) for i, o in args_pair]
+            futures = [executor.submit(_compile_ui, toolchain.uic_executable, i, o) for i, o in args_pair]
             for f in as_completed(futures):
                 ok, i, o = f.result()
                 if ok:
@@ -151,7 +154,7 @@ def build_assets(toolchain: Toolchain, asset_list, cache, no_cache=False):
 
         # Compile qrc file to Python resource
         result = subprocess.run([
-            "pyside6-rcc",
+            toolchain.rcc_executable,
             str(qrc_file),
             "-o",
             str(py_res_file)],
@@ -209,12 +212,12 @@ def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
     cache["i18n"] = i18n_cache
 
 
-def _compile_qm(input_file: Path, output_file: Path):
+def _compile_qm(lrelease, input_file: Path, output_file: Path):
     """Compile .ts files to .qm files
     This function will be called in build_i18n via `ProcessPoolExecutor`"""
     logging.info(f"Compiling {input_file} to {output_file}")
     cmd = [
-        "pyside6-lrelease",
+        lrelease,
         str(input_file),
         "-qm",
         str(output_file)]
@@ -232,7 +235,7 @@ def _compile_qm(input_file: Path, output_file: Path):
         return False, input_file, output_file
 
 
-def build_i18n(toolchain: Toolchain, i18n_list, cache):
+def build_i18n(toolchain: Toolchain, i18n_list, cache, low_perf_mode):
     """
     Compile .ts translation files into .qm files under app/assets/i18n/.
     Only regenerate .qm if the corresponding .ts file has changed.
@@ -264,15 +267,17 @@ def build_i18n(toolchain: Toolchain, i18n_list, cache):
             logging.info("%s is up to date.", ts_file)
             continue
 
-        args_pair.append((ts_file, qm_file))
-
         # Update cache
         i18n_cache[str(ts_file)] = ts_mtime
+        if low_perf_mode:
+            _compile_qm(toolchain.lrelease_executable, ts_file, qm_file)
+        else:
+            args_pair.append((ts_file, qm_file))
 
     has_error = False
     if args_pair:
         with ProcessPoolExecutor() as executor:
-            futures = [executor.submit(_compile_qm, i, o) for i, o in args_pair]
+            futures = [executor.submit(_compile_qm, toolchain.lrelease_executable, i, o) for i, o in args_pair]
             for f in as_completed(futures):
                 ok, i, _ = f.result()
                 if ok:
