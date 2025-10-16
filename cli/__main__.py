@@ -2,6 +2,9 @@ import logging
 import os
 import sys
 
+import colorama
+from colorlog import ColoredFormatter
+
 from cli.args import get_parser
 from cli.builder.build import gen_version_py, build
 from cli.builder.qt import build_i18n_ts, build_i18n, build_ui, build_assets, gen_init_py
@@ -23,7 +26,22 @@ def main():
     cache = {}
     extra_backend_options_list = []
 
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    if sys.platform == "win32":
+        colorama.just_fix_windows_console()
+
+    logging.getLogger().setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColoredFormatter(
+        fmt='%(log_color)s%(asctime)s - %(levelname)s - %(message)s',
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'bold_red',
+        }
+    ))
+    logging.getLogger().addHandler(handler)
 
     args = get_parser().parse_args()
     if args.backend_args and args.backend_args[0] == "--":

@@ -5,6 +5,8 @@ description = "A command-line tool for quickly creating and managing PySide6 pro
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    "colorama>=0.4.6",
+    "colorlog>=6.9.0",
     "glom>=24.11.0",
     "toml>=0.10.2",
 ]
