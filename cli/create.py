@@ -28,7 +28,7 @@ def create(toolchain: Toolchain, name: str):
         dst = '.'
 
     if toolchain.git_executable is None:
-        logging.warning("Git executable not found, skipping")
+        logging.warning("Git executable not found, skipping.")
         sys.exit(-1)
 
     logging.info(f"Creating ...")
@@ -41,7 +41,7 @@ def create(toolchain: Toolchain, name: str):
         shell=True
     )
     if rt.returncode:
-        logging.error('Failed to clone template')
+        logging.error('Failed to clone template.')
         return
 
     project_path = Path(dst)
@@ -68,4 +68,4 @@ def create(toolchain: Toolchain, name: str):
         shell=True
     )
 
-    logging.info(f"Project {name} created successfully")
+    logging.info(f"Project {name} created successfully.")

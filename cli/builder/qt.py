@@ -34,7 +34,7 @@ def _compile_ui(uic, input_file: Path, output_file: Path):
 def build_ui(toolchain: Toolchain, ui_list, cache, low_perf_mode):
     """Compile *.ui files into Python files using pyside6-uic, preserving directory structure."""
     if toolchain.uic_executable is None:
-        logging.warning("PySide6 uic not found, exiting")
+        logging.warning("PySide6 uic not found, exiting.")
         sys.exit(-1)
 
     ui_dir = Path("app/ui")
@@ -82,7 +82,7 @@ def build_ui(toolchain: Toolchain, ui_list, cache, low_perf_mode):
             for f in as_completed(futures):
                 ok, i, o = f.result()
                 if ok:
-                    logging.info(f"Converted {i} to {o}")
+                    logging.info(f"Converted {i} to {o}.")
                 else:
                     logging.error(f"Failed to convert {i}.")
                     has_error = True
@@ -101,7 +101,7 @@ def build_ui(toolchain: Toolchain, ui_list, cache, low_perf_mode):
 def build_assets(toolchain: Toolchain, asset_list, cache, no_cache=False):
     """Generate assets.qrc from files in app/assets and compile it with pyside6-rcc."""
     if toolchain.rcc_executable is None:
-        logging.warning('PySide6 rcc not found, exiting')
+        logging.warning('PySide6 rcc not found, exiting.')
         sys.exit(-1)
 
     assets_dir = Path('app/assets')
@@ -175,7 +175,7 @@ def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
     by scanning self.ui_list and self.source_list using pyside6-lupdate.
     """
     if toolchain.lupdate_executable is None:
-        logging.warning("PySide6 lupdate not found, skipping i18n generation")
+        logging.warning("PySide6 lupdate not found, skipping i18n generation.")
         return
 
     i18n_dir = Path("app/i18n")
@@ -203,11 +203,11 @@ def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
         logging.debug(" ".join(cmd))
         result = subprocess.run(cmd, shell=True, env=os.environ.copy())
         if 0 != result.returncode:
-            logging.error("Failed to generate translation file: %s", ts_file)
+            logging.error("Failed to generate translation file: %s.", ts_file)
             exit(1)
 
         i18n_cache[lang] = ts_file.stat().st_mtime
-        logging.info("Generated translation file: %s", ts_file)
+        logging.info("Generated translation file: %s.", ts_file)
 
     cache["i18n"] = i18n_cache
 
@@ -215,7 +215,7 @@ def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
 def _compile_qm(lrelease, input_file: Path, output_file: Path):
     """Compile .ts files to .qm files
     This function will be called in build_i18n via `ProcessPoolExecutor`"""
-    logging.info(f"Compiling {input_file} to {output_file}")
+    logging.info(f"Compiling {input_file} to {output_file}.")
     cmd = [
         lrelease,
         str(input_file),
@@ -241,7 +241,7 @@ def build_i18n(toolchain: Toolchain, i18n_list, cache, low_perf_mode):
     Only regenerate .qm if the corresponding .ts file has changed.
     """
     if toolchain.lrelease_executable is None:
-        logging.warning("PySide6 lrelease not found, skipping i18n compilation")
+        logging.warning("PySide6 lrelease not found, skipping i18n compilation.")
         return
 
     qm_root = Path("app/assets/i18n")
@@ -281,7 +281,7 @@ def build_i18n(toolchain: Toolchain, i18n_list, cache, low_perf_mode):
             for f in as_completed(futures):
                 ok, i, _ = f.result()
                 if ok:
-                    logging.info(f"Compiled {i}")
+                    logging.info(f"Compiled {i}.")
                 else:
                     logging.error(f"Failed to compile translation file: {i}.")
                     has_error = True

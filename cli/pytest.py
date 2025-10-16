@@ -6,7 +6,7 @@ from cli.toolchain import Toolchain
 
 def run_test(toolchain: Toolchain, args):
     if toolchain.pytest_executable is None:
-        logging.warning("Pytest executable not found, skipping test")
+        logging.warning("Pytest executable not found, skipping test.")
         return -1
     cmd = ['pytest'] + args.backend_args
     logging.debug(' '.join(cmd))

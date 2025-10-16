@@ -46,12 +46,12 @@ def build(toolchain: Toolchain, args, extra_backend_options_list: List[str]):
     logging.info('Building the app...')
     if args.backend == 'nuitka':
         if toolchain.nuitka_executable is None:
-            logging.warning('Nuitka executable not found, please install Nuitka first')
+            logging.warning('Nuitka executable not found, please install Nuitka first.')
             sys.exit(-1)
         cmd = build_nuitka_cmd(toolchain.nuitka_executable, args, extra_backend_options_list)
     else:
         if toolchain.pyinstaller_executable is None:
-            logging.warning('PyInstaller executable not found, please install PyInstaller first')
+            logging.warning('PyInstaller executable not found, please install PyInstaller first.')
             sys.exit(-1)
         cmd = build_pyinstaller_cmd(toolchain.pyinstaller_executable, args)
     logging.debug(' '.join(cmd))
