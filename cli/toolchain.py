@@ -16,7 +16,7 @@ def _add_path():
         for package_name in package_names:
             full_path = os.path.join(item, package_name)
             if os.path.exists(full_path):
-                appended_path += full_path + os.path.pathsep
+                appended_path += os.path.pathsep + full_path + os.path.pathsep
 
     os.environ["PATH"] += appended_path
 
