@@ -12,7 +12,7 @@ from cli.cache import load_cache, save_cache
 from cli.create import create
 from cli.git import get_last_tag
 from cli.glob import glob_files
-from cli.pyproject import load_pyproject
+from cli.pyproject import PyProjectConfig
 from cli.pytest import run_test
 from cli.toolchain import find_toolchain
 
@@ -22,9 +22,8 @@ def main():
     ui_list = []
     asset_list = []
     i18n_list = []
-    lang_list = []
+    config = None
     cache = {}
-    extra_backend_options_list = []
 
     if sys.platform == "win32":
         colorama.just_fix_windows_console()
@@ -72,8 +71,7 @@ def main():
          i18n_list,
          source_list,
          ui_list) = glob_files()
-
-        (extra_backend_options_list, lang_list) = load_pyproject()
+        config = PyProjectConfig()
 
     if not args.no_cache:
         cache = load_cache()
@@ -81,7 +79,7 @@ def main():
     if args.i18n:
         build_i18n_ts(
             toolchain=toolchain,
-            lang_list=lang_list,
+            lang_list=config.lang_list,
             cache=cache,
             files_to_scan=[str(f) for f in ui_list + source_list]
         )
@@ -108,7 +106,7 @@ def main():
         gen_init_py()
     save_cache(cache)
     if args.build or args.all:
-        build(toolchain, args, extra_backend_options_list)
+        build(toolchain, args, config)
 
 
 if __name__ == '__main__':

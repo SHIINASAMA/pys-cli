@@ -9,6 +9,7 @@ from typing import List
 
 from cli.builder.nuitka import build_nuitka_cmd
 from cli.builder.pyinstaller import build_pyinstaller_cmd
+from cli.pyproject import PyProjectConfig
 from cli.toolchain import Toolchain
 
 
@@ -34,7 +35,7 @@ def gen_filelist(root_dir: str, filelist_name: str):
         f.write("\n")
 
 
-def build(toolchain: Toolchain, args, extra_backend_options_list: List[str]):
+def build(toolchain: Toolchain, args, config: PyProjectConfig):
     """call nuitka to build the app"""
     if sys.platform != 'win32':
         path = Path('build/App')
@@ -48,12 +49,12 @@ def build(toolchain: Toolchain, args, extra_backend_options_list: List[str]):
         if toolchain.nuitka_executable is None:
             logging.warning('Nuitka executable not found, please install Nuitka first.')
             sys.exit(-1)
-        cmd = build_nuitka_cmd(toolchain.nuitka_executable, args, extra_backend_options_list)
+        cmd = build_nuitka_cmd(toolchain.nuitka_executable, args, config.extra_nuitka_options_list)
     else:
         if toolchain.pyinstaller_executable is None:
             logging.warning('PyInstaller executable not found, please install PyInstaller first.')
             sys.exit(-1)
-        cmd = build_pyinstaller_cmd(toolchain.pyinstaller_executable, args)
+        cmd = build_pyinstaller_cmd(toolchain.pyinstaller_executable, args, config.extra_pyinstaller_options_list)
     logging.debug(' '.join(cmd))
     try:
         result = subprocess.run(cmd, shell=True)

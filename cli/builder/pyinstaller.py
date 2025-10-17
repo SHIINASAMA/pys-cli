@@ -1,4 +1,4 @@
-def build_pyinstaller_cmd(pyinstaller, args):
+def build_pyinstaller_cmd(pyinstaller, args, options):
     workpath = 'build/' + ('pyinstaller_onefile_build' if args.onefile else 'pyinstaller_onedir_build')
     cmd = [
         pyinstaller,
@@ -9,5 +9,6 @@ def build_pyinstaller_cmd(pyinstaller, args):
         '--log-level', 'DEBUG' if args.debug else 'WARN',
         '--name', 'App', 'app/__main__.py',
     ]
+    cmd.extend(options)
     cmd.extend(args.backend_args)
     return cmd
