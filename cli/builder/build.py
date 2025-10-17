@@ -68,6 +68,8 @@ def build(toolchain: Toolchain, args, config: PyProjectConfig):
                 if os.path.exists('build/App'):
                     shutil.rmtree('build/App')
                 shutil.move('build/app.dist', 'build/App')
+            else:
+                shutil.rmtree('App.spec', ignore_errors=True)
             logging.info("Generate the filelist.")
             gen_filelist('build/App', 'build/App/filelist.txt')
             logging.info("Filelist has been generated.")
