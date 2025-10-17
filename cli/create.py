@@ -33,12 +33,13 @@ def create(toolchain: Toolchain, name: str):
 
     logging.info(f"Creating ...")
 
+    shell_mode = os.name == "nt"
     rt = subprocess.run([
         toolchain.git_executable,
         'clone',
         'https://github.com/SHIINASAMA/pyside_template.git',
         dst],
-        shell=True
+        shell=shell_mode
     )
     if rt.returncode:
         logging.error('Failed to clone template.')
@@ -61,11 +62,12 @@ def create(toolchain: Toolchain, name: str):
     git_dir = project_path / '.git'
     _remove_git(git_dir)
 
+    shell_mode = os.name == "nt"
     subprocess.run([
         'git',
         'init'],
         cwd=project_path,
-        shell=True
+        shell=shell_mode
     )
 
     logging.info(f"Project {name} created successfully.")

@@ -18,10 +18,11 @@ def _compile_ui(uic, input_file: Path, output_file: Path):
         "-o",
         str(output_file)]
     logging.debug(" ".join(cmd))
+    shell_mode = os.name == "nt"
     try:
         result = subprocess.run(
             cmd,
-            shell=True
+            shell=shell_mode
         )
         success = result.returncode == 0
         if not success:
@@ -153,12 +154,18 @@ def build_assets(toolchain: Toolchain, asset_list, cache, no_cache=False):
         logging.info(f'Generated {qrc_file}.')
 
         # Compile qrc file to Python resource
-        result = subprocess.run([
+        cmd = [
             toolchain.rcc_executable,
             str(qrc_file),
             "-o",
-            str(py_res_file)],
-            shell=True)
+            str(py_res_file)
+        ]
+        logging.debug(" ".join(cmd))
+        shell_mode = os.name == "nt"
+        result = subprocess.run(
+            cmd,
+            shell=shell_mode
+        )
         if 0 != result.returncode:
             logging.error('Failed to convert assets.qrc.')
             exit(1)
@@ -201,7 +208,8 @@ def build_i18n_ts(toolchain: Toolchain, lang_list, files_to_scan, cache):
             "-ts", str(ts_file)
         ]
         logging.debug(" ".join(cmd))
-        result = subprocess.run(cmd, shell=True, env=os.environ.copy())
+        shell_mode = os.name == "nt"
+        result = subprocess.run(cmd, shell=shell_mode, env=os.environ.copy())
         if 0 != result.returncode:
             logging.error("Failed to generate translation file: %s.", ts_file)
             exit(1)
@@ -222,10 +230,11 @@ def _compile_qm(lrelease, input_file: Path, output_file: Path):
         "-qm",
         str(output_file)]
     logging.debug(" ".join(cmd))
+    shell_mode = os.name == "nt"
     try:
         result = subprocess.run(
             cmd,
-            shell=True
+            shell=shell_mode
         )
         success = result.returncode == 0
         if not success:

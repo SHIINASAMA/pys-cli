@@ -56,8 +56,9 @@ def build(toolchain: Toolchain, args, config: PyProjectConfig):
             sys.exit(-1)
         cmd = build_pyinstaller_cmd(toolchain.pyinstaller_executable, args, config.extra_pyinstaller_options_list)
     logging.debug(' '.join(cmd))
+    shell_mode = os.name == "nt"
     try:
-        result = subprocess.run(cmd, shell=True)
+        result = subprocess.run(cmd, shell=shell_mode)
         end = time.perf_counter()
         if result.returncode != 0:
             logging.error(f'Failed to build app in {end - start:.3f}s.')
