@@ -58,7 +58,7 @@ class Toolchain:
         logging.info(f"PYTEST: {self.pytest_executable is not None}")
 
         logging.debug(f"Path to GIT: {self.git_executable}")
-        logging.debug(f"Path to UIC: {self.rcc_executable}")
+        logging.debug(f"Path to UIC: {self.uic_executable}")
         logging.debug(f"Path to RCC: {self.rcc_executable}")
         logging.debug(f"Path to LUPDATE: {self.lupdate_executable}")
         logging.debug(f"Path to LRELEASE: {self.lrelease_executable}")
